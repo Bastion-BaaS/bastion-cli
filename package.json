@@ -22,6 +22,7 @@
     "@oclif/plugin-plugins": "^2.0.1",
     "chalk": "^5.0.1",
     "conf": "^10.1.1",
+    "inquirer": "^8.2.1",
     "ora": "^6.1.0"
   },
   "devDependencies": {
@@ -34,7 +35,6 @@
   },
   "oclif": {
     "bin": "bastion",
-    "dirname": "bastion",
     "commands": "./src/commands",
     "plugins": [
       "@oclif/plugin-help",
