@@ -1,0 +1,499 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  Region:
+    Type: String
+    Default: us-east-1
+  VpcAz:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: us-east-1c
+  BackupAz:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: us-east-1b
+  InfraName:
+    Type: String
+    Default: BastionInitial
+  AdminAppImage:
+    Type: String
+    Default: 'public.ecr.aws/y7d9d7k6/public_dummy:0.1.0'
+Resources:
+  BastionVPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.16.0.0/16
+      EnableDnsHostnames: 'true'
+      EnableDnsSupport: 'true'
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+    DependsOn:
+      - BastionIGW
+  BastionIGW:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+  VPCRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref BastionVPC
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+  BastionGWAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: !Ref BastionIGW
+      VpcId:
+        Ref: BastionVPC
+    DependsOn:
+      - VPCRouteTable
+  BastionGWRoute:
+    Type: 'AWS::EC2::Route'
+    DependsOn:
+      - VPCRouteTable
+      - BastionGWAttachment
+      - BastionIGW
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref VPCRouteTable
+      GatewayId: !Ref BastionIGW
+  DBTier:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref BastionVPC
+      AvailabilityZone: !Ref VpcAz
+      CidrBlock: 10.16.0.0/20
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+    DependsOn:
+      - BastionVPC
+  AppTier:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref BastionVPC
+      AvailabilityZone: !Ref VpcAz
+      CidrBlock: 10.16.16.0/20
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+  WebTier1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref BastionVPC
+      AvailabilityZone: !Ref VpcAz
+      CidrBlock: 10.16.32.0/20
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+  WebTier2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref BastionVPC
+      AvailabilityZone: !Ref BackupAz
+      CidrBlock: 10.16.48.0/20
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+  WebTier1VPCRTAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref WebTier1
+      RouteTableId: !Ref VPCRouteTable
+  WebTier2VPCRTAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref WebTier2
+      RouteTableId: !Ref VPCRouteTable
+  AdminAppCluster:
+    Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName: AdminAppCluster
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+  AdminAppLG:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      RetentionInDays: 7
+  SGAdminApp:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref BastionVPC
+      GroupName: SGAdminApp
+      GroupDescription: Bastion security group for the Admin App
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 8080
+          Description: Allow inbound traffic
+          SourceSecurityGroupId: !Ref SGALB
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+  RoleAdminApp:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+      RoleName: RoleAdminApp
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: BastionTaskExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:PutImage'
+                  - 'ecr:InitiateLayerUpload'
+                  - 'ecr:UploadLayerPart'
+                  - 'ecr:CompleteLayerUpload'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                  - 'ecs:*'
+                Resource: '*'
+        - PolicyName: CCFBucketPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 's3:*'
+                Resource:
+                  - 'arn:aws:s3:::ccf-bucket'
+        - PolicyName: CCFLambdaPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 'lambda:*'
+                Resource: '*'
+  AdminAppTaskDefinition:
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !GetAtt RoleAdminApp.Arn
+      TaskRoleArn: !GetAtt RoleAdminApp.Arn
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        - Name: AdminAppTest
+          Essential: 'true'
+          Image: !Ref AdminAppImage
+          PortMappings:
+            - ContainerPort: 3001
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-group: !Ref AdminAppLG
+              awslogs-stream-prefix: ecs
+    DependsOn:
+      - AdminAppLG
+  AdminAppService:
+    Type: 'AWS::ECS::Service'
+    Properties:
+      LaunchType: FARGATE
+      Cluster: !Ref AdminAppCluster
+      DesiredCount: 1
+      TaskDefinition: !Ref AdminAppTaskDefinition
+      DeploymentConfiguration:
+        MaximumPercent: 100
+        MinimumHealthyPercent: 0
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            - !Ref AppTier
+          SecurityGroups:
+            - !GetAtt SGAdminApp.GroupId
+      LoadBalancers:
+        - ContainerPort: 3001
+          ContainerName: AdminAppTest
+          TargetGroupArn:
+            Ref: AdminAppTargetGroup
+    DependsOn:
+      - ALBListener1
+      - ALB
+  ALB:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      Type: application
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+      Scheme: internet-facing
+      Subnets:
+        - !Ref WebTier1
+        - !Ref WebTier2
+      SecurityGroups:
+        - !Ref SGALB
+    DependsOn:
+      - BastionIGW
+      - BastionGWRoute
+      - BastionGWAttachment
+      - WebTier1
+      - WebTier2
+  ALBListener1:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 3001
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref AdminAppTargetGroup
+                Weight: 1
+    DependsOn:
+      - ALB
+  SGALB:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref BastionVPC
+      Tags:
+        - Key: stack
+          Value: bastion
+        - Key: name
+          Value: !Ref InfraName
+      GroupName: SGALB
+      GroupDescription: Bastion ALB Security Group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3001
+          ToPort: 3001
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 3001
+          ToPort: 3001
+          CidrIp: 0.0.0.0/0
+  AdminAppTargetGroup:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      VpcId: !Ref BastionVPC
+      Tags:
+        - Key: stack
+          Value: bastion
+        - Key: name
+          Value: !Ref InfraName
+      Name: AdminAppTargetGroup
+      HealthCheckEnabled: true
+      Port: 3001
+      Protocol: HTTP
+      TargetType: ip
+  WT1NATGateway:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt NATEIP.AllocationId
+      SubnetId: !Ref WebTier1
+    DependsOn:
+      - WebTier1
+  NATEIP:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  AppTierRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref BastionVPC
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+  NATGatewayRoute:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref AppTierRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref WT1NATGateway
+  AppTierRTAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref AppTier
+      RouteTableId: !Ref AppTierRouteTable
+  ALBListener2:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref AdminAppTargetGroup
+                Weight: 1
+    DependsOn:
+      - ALB
+  CCFBucket:
+    Type: 'AWS::S3::Bucket'
+    Description: S3 Bucket for Cloud Code Function zip files
+    Properties:
+      BucketName: ccf-bucket
+      VersioningConfiguration:
+        Status: Suspended
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  RoleCCF:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+      RoleName: RoleCCF
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: CCFLambdaExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - '*'
+  RoleAppServer:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+      RoleName: RoleAppServer
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: AdminAppExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:PutImage'
+                  - 'ecr:InitiateLayerUpload'
+                  - 'ecr:UploadLayerPart'
+                  - 'ecr:CompleteLayerUpload'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                  - 'ecs:*'
+                Resource: '*'
+        - PolicyName: AppServerLambdaExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 'lambda:*'
+                Resource: '*'
+  SGCCF:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security Group for Cloud Code Functions
+      VpcId: !Ref BastionVPC
+      Tags:
+        - Key: stack
+          Value: bastion
+        - Key: name
+          Value: !Ref InfraName
+      GroupName: SGCCF
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
