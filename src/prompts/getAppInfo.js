@@ -1,5 +1,7 @@
 const inquirer = require('inquirer');
 const chalk = require('chalk');
+const Conf  = require('conf');
+const config = new Conf();
 
 const getAppInfo = async () => {
   console.log(chalk.cyan('Welcome to the Bastion CLI!'));
@@ -39,6 +41,9 @@ const getAppInfo = async () => {
       ]
     }
   ]);
+
+  config.set('NAME', response.name);
+  config.set('REGION', response.region);
 
   return response;
 };

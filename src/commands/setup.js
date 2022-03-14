@@ -1,7 +1,24 @@
 const { Command } = require('@oclif/core');
-const { CloudFormationClient, CreateStackCommand } = require('@aws-sdk/client-cloudformation');
+const { CloudFormationClient, CreateStackCommand, DescribeStacksCommand } = require('@aws-sdk/client-cloudformation');
 const fs = require('fs');
 const getAppInfo = require('../prompts/getAppInfo');
+const Conf  = require('conf');
+const config = new Conf();
+
+// eventually move this function to different file
+const stackUpdate = async (client, StackName) => {
+  console.log('Beginning AWS stack creation. This may take a few minutes');
+  let currentState = '';
+
+  while(currentState !== 'CREATE_COMPLETE') {
+    await new Promise(_ => setTimeout(_, 5000));
+
+    const response = await client.send(new DescribeStacksCommand({ StackName }));
+    currentState = response.Stacks[0].StackStatus;
+  }
+
+  console.log('Successfully created your AWS stack!');
+}
 
 class Setup extends Command {
   static description = 'Create AWS infrastructure for your app';
@@ -14,7 +31,7 @@ class Setup extends Command {
     // fs.writeFileSync('../config.json', json, 'utf8');
 
     const client = new CloudFormationClient({ region });
-    const template = fs.readFileSync('./src/utils/bastion.yaml', 'utf8');
+    const template = fs.readFileSync('./src/utils/testingTemplate.yaml', 'utf8');
 
     const params = {
       StackName: name,
@@ -36,8 +53,10 @@ class Setup extends Command {
 
     client.send(command, function(err, data) {
       if (err) console.log(err, err.stack);
-      else     console.log(data);
+      // else     console.log(data);
     });
+
+    await stackUpdate(client, name);
   }
 }
 
