@@ -1,5 +1,7 @@
 const {Command} = require('@oclif/core')
 const inquirer = require('inquirer');
+const Conf = require('conf');
+const config = new Conf();
 
 class TestCommand extends Command {
   async run() {
@@ -13,7 +15,10 @@ class TestCommand extends Command {
         }
       ])
 
-    this.log(`you entered: ${response.yourName}`)
+    const potentialAPIKey = config.get('API_KEY')
+    const currentUserKey = config.get('USER_KEY')
+
+    this.log(`you entered: ${response.yourName} and maybe your api key? ${potentialAPIKey} and your user key: ${currentUserKey}`)
   }
 }
 
