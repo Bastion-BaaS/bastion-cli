@@ -11,3 +11,8 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Ref InfraName
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: region
+          Value: !Ref Region

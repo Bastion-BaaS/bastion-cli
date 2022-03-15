@@ -1,10 +1,10 @@
 const { Command } = require('@oclif/core');
-const { CloudFormationClient, CreateStackCommand, DescribeStacksCommand } = require('@aws-sdk/client-cloudformation');
+const { CloudFormationClient, CreateStackCommand } = require('@aws-sdk/client-cloudformation');
 const fs = require('fs');
 const getAppInfo = require('../prompts/getAppInfo');
 const Conf  = require('conf');
 const config = new Conf();
-const template = fs.readFileSync('./src/utils/test.yaml', 'utf8');
+const template = fs.readFileSync('./src/utils/bastion.yaml', 'utf8');
 const errorHandler = require('../utils/errorHandler');
 const ui = require('../utils/ui');
 

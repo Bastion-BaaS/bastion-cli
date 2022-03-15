@@ -9,6 +9,9 @@ Parameters:
   AdminAppImage:
     Type: String
     Default: 'public.ecr.aws/y7d9d7k6/public_dummy:0.1.0'
+  CCFBucketName:
+    Type: String
+    Default: ccf-bucket
 Resources:
   BastionVPC:
     Type: 'AWS::EC2::VPC'
@@ -193,7 +196,7 @@ Resources:
               - Effect: Allow
                 Action: 's3:*'
                 Resource:
-                  - 'arn:aws:s3:::ccf-bucket'
+                  - !GetAtt CCFBucket.Arn
         - PolicyName: CCFLambdaPolicy
           PolicyDocument:
             Version: 2012-10-17
@@ -201,6 +204,8 @@ Resources:
               - Effect: Allow
                 Action: 'lambda:*'
                 Resource: '*'
+      DependsOn:
+        - CCFBucket
   AdminAppTaskDefinition:
     Type: 'AWS::ECS::TaskDefinition'
     Properties:
@@ -377,7 +382,7 @@ Resources:
     Type: 'AWS::S3::Bucket'
     Description: S3 Bucket for Cloud Code Function zip files
     Properties:
-      BucketName: ccf-bucket
+      BucketName: !Ref CCFBucketName
       VersioningConfiguration:
         Status: Suspended
       AccessControl: Private
@@ -491,3 +496,8 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+
+Outputs:
+  ALBDomain:
+    Description: Application Load Balancer Domain Name
+    Value: !GetAtt ALB.DNSName

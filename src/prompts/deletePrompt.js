@@ -11,7 +11,7 @@ const getCurrentInfraNames = () => {
 const deletePrompt = async () => {
   let currentInfras = getCurrentInfraNames();
   if (currentInfras.length === 0) {
-    const message = "It seems like you dont have any Bastion infrastructure deployed"
+    const message = "It seems like you dont have any Bastion infrastructure deployed";
     ui.warn(message);
     return;
   }
