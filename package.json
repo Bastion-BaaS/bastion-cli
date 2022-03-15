@@ -1,5 +1,5 @@
 {
-  "name": "bastion-cli",
+  "name": "bastion-baas-cli",
   "version": "0.0.1",
   "description": "CLI app for deploying your bastion infrastructure",
   "author": "bastion-cli",
