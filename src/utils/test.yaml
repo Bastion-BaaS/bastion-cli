@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  Region:
+    Type: String
+    Default: us-east-1
+  InfraName:
+    Type: String
+    Default: BastionInitial
+Resources:
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref InfraName

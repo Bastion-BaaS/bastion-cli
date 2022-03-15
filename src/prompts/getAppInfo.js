@@ -1,15 +1,22 @@
 const inquirer = require('inquirer');
 const chalk = require('chalk');
+const Conf  = require('conf');
+const config = new Conf();
 
-const start = async () => {
+const infraNameValidator = async (input) => {
+  return /[A-Z]/.test(input)
+}
+
+const getAppInfo = async () => {
   console.log(chalk.cyan('Welcome to the Bastion CLI!'));
 
-  // We can change/add input choices later
   let response = await inquirer.prompt([
     {
       name: 'name',
-      message: 'Choose your app name:',
+      message: 'Choose a name for your infrastructure:',
       type: 'input',
+      default: 'BastionInitial',
+      validate: infraNameValidator
     },
     {
       name: 'region',
@@ -23,24 +30,16 @@ const start = async () => {
         'eu-west-1',
         'eu-west-2',
         'eu-west-3',
+        'eu-central-1',
+        'eu-central-2',
+        'ap-southeast-1',
+        'ap-southeast-2',
       ],
       default: 'us-east-1',
-    },
-    {
-      name: 'az',
-      message: 'Select your availability zone:',
-      type: 'list',
-      default: 'us-east-1c',
-      choices: [
-        'us-east-1a',
-        'us-east-1b',
-        'us-east-1c',
-        'us-east-1d',
-      ]
     }
   ]);
 
   return response;
 };
 
-module.exports = start; 
+module.exports = getAppInfo; 

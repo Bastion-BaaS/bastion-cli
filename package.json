@@ -2,7 +2,17 @@
   "name": "bastion-cli",
   "version": "0.0.1",
   "description": "CLI app for deploying your bastion infrastructure",
-  "author": "\"Reilly Knutson @Reillyknut\"",
+  "author": "bastion-cli",
+  "contributors": [
+    {
+      "name": "Alican Sungur @asungur",
+      "email": "sunguralican@gmail.com",
+      "url": "https://www.asungur.com/"
+    },
+    {
+      "name": "Reilly Knutson"
+    }
+  ],
   "bin": {
     "bastion": "./bin/run"
   },
@@ -20,9 +30,10 @@
     "@oclif/core": "^1",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2.0.1",
-    "chalk": "^5.0.1",
+    "chalk": "^4.1.1",
     "conf": "^10.1.1",
-    "ora": "^6.1.0"
+    "inquirer": "^8.2.1",
+    "ora": "^5.4.0"
   },
   "devDependencies": {
     "@oclif/test": "^2",
@@ -34,7 +45,6 @@
   },
   "oclif": {
     "bin": "bastion",
-    "dirname": "bastion",
     "commands": "./src/commands",
     "plugins": [
       "@oclif/plugin-help",
