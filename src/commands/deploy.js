@@ -1,5 +1,5 @@
 const { Command } = require('@oclif/core');
-const { CloudFormationClient, CreateStackCommand, DescribeStacksCommand } = require('@aws-sdk/client-cloudformation');
+const { CloudFormationClient, CreateStackCommand } = require('@aws-sdk/client-cloudformation');
 const fs = require('fs');
 const getAppInfo = require('../prompts/getAppInfo');
 const Conf  = require('conf');
@@ -47,6 +47,7 @@ class DeployCommand extends Command {
           "To see your if your admin dashboard is ready use 'bastion show' \n";
         ui.notify(successMessage);
         storeInfraName({ name, region });
+        console.log(`Location of your configuration file: ${config.path}`);
       }
     } catch(err) {
       errorHandler.handleDeploy(err);

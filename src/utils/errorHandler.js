@@ -10,4 +10,8 @@ const handleDestroy = (err) => {
   ui.warn(err.Error, true);
 }
 
-module.exports = { handleDeploy, handleDestroy };
+const handleShow = (err) => {
+  console.log(err.Error);
+}
+
+module.exports = { handleDeploy, handleDestroy, handleShow };
