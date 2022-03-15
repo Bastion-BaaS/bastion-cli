@@ -1,8 +1,7 @@
 const inquirer = require('inquirer');
-const chalk = require('chalk');
 const Conf  = require('conf');
+const ui = require('../utils/ui');
 const config = new Conf();
-const danger = chalk.hex('#800015').bold;
 
 const getCurrentInfraNames = () => {
   let infraArr = JSON.parse(config.get('INFRA_NAMES') || '[]');
@@ -12,7 +11,8 @@ const getCurrentInfraNames = () => {
 const deletePrompt = async () => {
   let currentInfras = getCurrentInfraNames();
   if (currentInfras.length === 0) {
-    const message = "It seems like you dont have any bastion infrastructure deployed"
+    const message = "It seems like you dont have any Bastion infrastructure deployed"
+    ui.warn(message);
     return;
   }
 
@@ -21,14 +21,14 @@ const deletePrompt = async () => {
   let infraToDestroy = await inquirer.prompt([
     {
       name: 'name',
-      message: 'Choose the bastion infrastructure you want to destroy:',
+      message: 'Choose the Bastion infrastructure you want to destroy:',
       type: 'list',
       choices: selection
     }
   ]);
 
-  console.log(danger(`This will delete your entire app: ${infraToDestroy.name}`));
-  const confirmMsg = danger('Are you absolutely sure you want to delete your app?)');
+  ui.warn(`This will delete your entire app: ${infraToDestroy.name}`);
+  const confirmMsg = ui.warn('Are you absolutely sure you want to delete your app?', false);
 
   let response = await inquirer.prompt([
     {
