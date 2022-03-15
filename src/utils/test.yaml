@@ -3,11 +3,11 @@ Parameters:
   Region:
     Type: String
     Default: us-east-1
-  VpcAz:
-    Type: AWS::EC2::AvailabilityZone::Name
-    Default: us-east-1c
+  InfraName:
+    Type: String
+    Default: BastionInitial
 Resources:
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: yamlClusterName
+      ClusterName: !Ref InfraName
