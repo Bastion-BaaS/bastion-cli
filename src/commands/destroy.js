@@ -4,6 +4,7 @@ const deletePrompt = require('../prompts/deletePrompt');
 const Conf  = require('conf');
 const config = new Conf();
 const errorHandler = require('../utils/errorHandler');
+const ui = require('../utils/ui');
 
 const removeInfraFromStore = (infraName) => {
   let infraArr = JSON.parse(config.get('INFRA_NAMES') || '[]');
@@ -12,12 +13,12 @@ const removeInfraFromStore = (infraName) => {
   config.set('INFRA_NAMES', JSON.stringify(newInfraArr));
 }
 
-class Destroy extends Command {
+class DestroyCommand extends Command {
   static description = 'Deletes all of your AWS infrastructure for your application';
   async run() {
     const confirmDelete = await deletePrompt();
     if (!confirmDelete || !confirmDelete.confirm) {
-      console.log('Deletion cancelled');
+      console.log(ui.ask('Deletion cancelled'));
       this.exit(0);
     }
 
@@ -28,10 +29,10 @@ class Destroy extends Command {
     try {
       const response = await client.send(command);
       if (response.$metadata.httpStatusCode === 200) {
-        const successMessage = "Your Bastion infrastructure deletion started \n" +
+        const successMessage = "\nYour Bastion infrastructure deletion started \n" +
           "This will take a few minutes and you won't be able use bastion during this time \n" +
           "To see your if your admin dashboard is fully destroyed use 'bastion show' \n";
-        console.log(successMessage);
+          ui.notify(successMessage);
         removeInfraFromStore(infra.name);
       }
     } catch(err) {
@@ -40,4 +41,4 @@ class Destroy extends Command {
   }
 }
 
-module.exports = Destroy;
+module.exports = DestroyCommand;

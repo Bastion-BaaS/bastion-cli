@@ -1,26 +1,25 @@
 const inquirer = require('inquirer');
-const chalk = require('chalk');
-const Conf  = require('conf');
-const config = new Conf();
+const ui = require('../utils/ui');
 
 const infraNameValidator = async (input) => {
   return /[A-Z]/.test(input)
 }
 
 const getAppInfo = async () => {
-  console.log(chalk.cyan('Welcome to the Bastion CLI!'));
+  ui.printLogo();
+  ui.printWelcome();
 
   let response = await inquirer.prompt([
     {
       name: 'name',
-      message: 'Choose a name for your infrastructure:',
+      message: ui.ask('What name do you want to give your Bastion infrastructure?'),
       type: 'input',
       default: 'BastionInitial',
       validate: infraNameValidator
     },
     {
       name: 'region',
-      message: 'Select the region for your Bastion app:',
+      message: ui.ask('In which AWS region do you want to deploy your infrastructure?'),
       type: 'list',
       choices: [
         'us-east-1',
