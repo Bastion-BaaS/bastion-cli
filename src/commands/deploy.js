@@ -4,7 +4,7 @@ const fs = require('fs');
 const getAppInfo = require('../prompts/getAppInfo');
 const Conf  = require('conf');
 const config = new Conf();
-const template = fs.readFileSync('./src/utils/test.yaml', 'utf8');
+const template = fs.readFileSync('./src/utils/bastion.yaml', 'utf8');
 const errorHandler = require('../utils/errorHandler');
 const ui = require('../utils/ui');
 
@@ -47,7 +47,6 @@ class DeployCommand extends Command {
           "To see your if your admin dashboard is ready use 'bastion show' \n";
         ui.notify(successMessage);
         storeInfraName({ name, region });
-        console.log(`Location of your configuration file: ${config.path}`);
       }
     } catch(err) {
       errorHandler.handleDeploy(err);

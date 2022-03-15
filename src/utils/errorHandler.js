@@ -11,7 +11,7 @@ const handleDestroy = (err) => {
 }
 
 const handleShow = (err) => {
-  console.log(err.Error);
+  console.log(ui.ask(err.Error));
 }
 
 module.exports = { handleDeploy, handleDestroy, handleShow };
