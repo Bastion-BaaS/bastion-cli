@@ -3,12 +3,6 @@ Parameters:
   Region:
     Type: String
     Default: us-east-1
-  VpcAz:
-    Type: AWS::EC2::AvailabilityZone::Name
-    Default: us-east-1c
-  BackupAz:
-    Type: AWS::EC2::AvailabilityZone::Name
-    Default: us-east-1b
   InfraName:
     Type: String
     Default: BastionInitial
@@ -68,7 +62,7 @@ Resources:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref BastionVPC
-      AvailabilityZone: !Ref VpcAz
+      AvailabilityZone: !Sub "${AWS::Region}a"
       CidrBlock: 10.16.0.0/20
       Tags:
         - Key: stack
@@ -81,7 +75,7 @@ Resources:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref BastionVPC
-      AvailabilityZone: !Ref VpcAz
+      AvailabilityZone: !Sub "${AWS::Region}a"
       CidrBlock: 10.16.16.0/20
       Tags:
         - Key: stack
@@ -92,7 +86,7 @@ Resources:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref BastionVPC
-      AvailabilityZone: !Ref VpcAz
+      AvailabilityZone: !Sub "${AWS::Region}a"
       CidrBlock: 10.16.32.0/20
       Tags:
         - Key: stack
@@ -103,7 +97,7 @@ Resources:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref BastionVPC
-      AvailabilityZone: !Ref BackupAz
+      AvailabilityZone: !Sub "${AWS::Region}b"
       CidrBlock: 10.16.48.0/20
       Tags:
         - Key: stack
