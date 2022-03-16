@@ -79,7 +79,7 @@ If you use `bastion destroy` before `bastion deploy` has fully provisioned your 
 
 <br>
 
-## `bastion **help [COMMAND]**`
+## `bastion help [COMMAND]`
 
 Displays help for Bastion CLI commands
 
@@ -105,4 +105,3 @@ Shows the location of your local configuration file. This file contains the name
 ## `bastion show`
 
 Displays the status of a stack you have created with `bastion deploy`. It tells you if your infrastructure is ready and if so, gives you a DNS name. You will be prompted for the name of the stack you would like to check the status of.
-
