@@ -465,6 +465,33 @@ Resources:
               - Effect: Allow
                 Action: 'lambda:*'
                 Resource: '*'
+  RoleDBServer:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+      RoleName: RoleDBServer
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: DBServerRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
   SGCCF:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -494,7 +521,48 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
-
+  SGAppServer:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: SGAppServer
+      GroupDescription: Security Group for BaaS instance App Server
+      VpcId: !Ref BastionVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 30000
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 30000
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: stack
+          Value: bastion
+        - Key: name
+          Value: !Ref InfraName
+  SGDBServer:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: SGDBServer
+      GroupDescription: Security Group for BaaS instance App Server
+      VpcId: !Ref BastionVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 30000
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 30000
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: stack
+          Value: bastion
+        - Key: name
+          Value: !Ref InfraName
 Outputs:
   ALBDomain:
     Description: Application Load Balancer Domain Name
