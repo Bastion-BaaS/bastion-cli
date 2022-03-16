@@ -563,6 +563,26 @@ Resources:
           Value: bastion
         - Key: name
           Value: !Ref InfraName
+  InstanceEFS:
+    Type: 'AWS::EFS::FileSystem'
+    Properties:
+      Encrypted: true
+      PerformanceMode: generalPurpose
+  EFSSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 30000
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 30000
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref BastionVPC
+      GroupDescription: Test
 Outputs:
   ALBDomain:
     Description: Application Load Balancer Domain Name
