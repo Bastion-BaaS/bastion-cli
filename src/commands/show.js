@@ -37,8 +37,8 @@ class Show extends Command {
       const status = response.Stacks[0].StackStatus;
 
       if (status === 'CREATE_COMPLETE') {
-        ui.notify('Your app is ready!');
-        ui.notify(`Your DNS name is: ${getDNS(response)}`);
+        spinner.stop(ui.ask('Your app is ready!'));
+        ui.notify(`Your DNS name is: ${ui.ask(getDNS(response))}`);
       } else {
         spinner.fail(console.log(ui.ask(`Not ready yet. Your AWS stack status: ${status}`)));
       }
