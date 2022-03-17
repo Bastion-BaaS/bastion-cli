@@ -8,7 +8,7 @@ Parameters:
     Default: BastionInitial
   AdminAppImage:
     Type: String
-    Default: 'public.ecr.aws/y7d9d7k6/dumb-admin-env:0.3.0'
+    Default: 'public.ecr.aws/y7d9d7k6/dumb-admin-env:0.13.1'
   CCFBucketName:
     Type: String
     Default: ccf-bucket2
@@ -249,6 +249,8 @@ Resources:
               Value: !GetAtt RoleAppServer.Arn
             - Name: DBServerIAMRoleArn
               Value: !GetAtt RoleDBServer.Arn
+            - Name: ALBListener
+              Value: !Ref ALBListener
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -292,7 +294,7 @@ Resources:
           TargetGroupArn:
             Ref: AdminAppTargetGroup
     DependsOn:
-      - ALBListener1
+      - ALBListener
       - ALB
   ALB:
     Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
@@ -315,20 +317,6 @@ Resources:
       - BastionGWAttachment
       - WebTier1
       - WebTier2
-  ALBListener1:
-    Type: 'AWS::ElasticLoadBalancingV2::Listener'
-    Properties:
-      LoadBalancerArn: !Ref ALB
-      Port: 3001
-      Protocol: HTTP
-      DefaultActions:
-        - Type: forward
-          ForwardConfig:
-            TargetGroups:
-              - TargetGroupArn: !Ref AdminAppTargetGroup
-                Weight: 1
-    DependsOn:
-      - ALB
   SGALB:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -403,7 +391,7 @@ Resources:
     Properties:
       SubnetId: !Ref AppTier
       RouteTableId: !Ref AppTierRouteTable
-  ALBListener2:
+  ALBListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
     Properties:
       LoadBalancerArn: !Ref ALB
@@ -417,6 +405,22 @@ Resources:
                 Weight: 1
     DependsOn:
       - ALB
+  AdminAppALBListenerRule:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - /admin/*
+      Actions:
+        - Type: forward
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref AdminAppTargetGroup
+                Weight: 1
   CCFBucket:
     Type: 'AWS::S3::Bucket'
     Description: S3 Bucket for Cloud Code Function zip files
