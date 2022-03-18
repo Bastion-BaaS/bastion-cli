@@ -8,7 +8,7 @@ Parameters:
     Default: BastionInitial
   AdminAppImage:
     Type: String
-    Default: 'public.ecr.aws/y7d9d7k6/dumb-admin-env:0.13.1'
+    Default: 'public.ecr.aws/y7d9d7k6/dumb-admin-env:0.14.0'
   CCFBucketName:
     Type: String
     Default: ccf-bucket2
@@ -269,8 +269,17 @@ Resources:
               awslogs-group: !Ref AdminAppLG
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: ecs
+          MountPoints:
+            - ContainerPath: /data/db
+              SourceVolume: admin-mongo-efs-volume
+      Volumes:
+        - Name: admin-mongo-efs-volume
+          EFSVolumeConfiguration:
+            FilesystemId: !Ref AdminEFS
     DependsOn:
       - AdminAppLG
+      - AdminEFS
+      - AdminMountTarget
   AdminAppService:
     Type: 'AWS::ECS::Service'
     Properties:
@@ -630,6 +639,21 @@ Resources:
           CidrIp: 0.0.0.0/0
       VpcId: !Ref BastionVPC
       GroupDescription: Test
+  AdminEFS:
+    Type: 'AWS::EFS::FileSystem'
+    Properties:
+      Encrypted: true
+      PerformanceMode: generalPurpose
+  AdminMountTarget:
+    Type: 'AWS::EFS::MountTarget'
+    Properties:
+      FileSystemId: !Ref AdminEFS
+      SecurityGroups:
+        - !Ref EFSSecurityGroup
+      SubnetId: !Ref AppTier
+    DependsOn:
+      - AdminEFS
+      - EFSSecurityGroup
 Outputs:
   ALBDomain:
     Description: Application Load Balancer Domain Name
