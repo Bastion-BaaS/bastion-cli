@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://via.placeholder.com/500x200?text=Placeholder+Image" width="500" height="200" />
+  <img src="Bastion_logo.png" width="400" height="400" />
 </p>
 
 <h1>Bastion: A self-hosted Backend-as-a-Service deployed using AWS</h1>

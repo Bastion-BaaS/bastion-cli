@@ -1,6 +1,6 @@
 const ora = require('ora');
 const chalk = require('chalk');
-const { logo } = require('./logo');
+const { logo, logoImg } = require('./logo');
 
 // for future use
 // const lightPurple = chalk.hex('#7B44FF');
@@ -22,6 +22,7 @@ const runSpinner = (message) => {
 };
 
 const printLogo = () => {
+  console.log(lightBlue(logoImg));
   console.log(lightBlue(logo));
 };
 
