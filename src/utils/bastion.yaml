@@ -264,7 +264,7 @@ Resources:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-group: !Ref AdminAppLG
               awslogs-stream-prefix: ecs
-        - Name: AdminAppDB
+        - Name: admin-db
           Essential: true
           Image: 'mongo:latest'
           PortMappings:
@@ -437,19 +437,6 @@ Resources:
             TargetGroups:
               - TargetGroupArn: !Ref AdminAppTargetGroup
                 Weight: 1
-  CCFBucket:
-    Type: 'AWS::S3::Bucket'
-    Description: S3 Bucket for Cloud Code Function zip files
-    Properties:
-      BucketName: !Ref CCFBucketName
-      VersioningConfiguration:
-        Status: Suspended
-      AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
   RoleCCF:
     Type: 'AWS::IAM::Role'
     Properties:
