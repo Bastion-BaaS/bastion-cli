@@ -270,6 +270,11 @@ Resources:
           PortMappings:
             - ContainerPort: 27017 
               HostPort: 27017
+          Environment:
+            - Name: MONGO_INITDB_ROOT_PASSWORD
+              Value: password
+            - Name: DBTierSubnet
+              Value: admin-app
           LogConfiguration:
             LogDriver: awslogs
             Options:
