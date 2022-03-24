@@ -262,7 +262,7 @@ Resources:
           Environment:
             - Name: MONGO_INITDB_ROOT_PASSWORD
               Value: password
-            - Name: DBTierSubnet
+            - Name: MONGO_INITDB_ROOT_USERNAME
               Value: admin-app
           LogConfiguration:
             LogDriver: awslogs
