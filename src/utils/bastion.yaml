@@ -367,6 +367,7 @@ Resources:
           Value: !Ref InfraName
       Name: AdminAppTargetGroup
       HealthCheckEnabled: true
+      HealthCheckPath: /admin/instances
       Port: 3001
       Protocol: HTTP
       TargetType: ip
