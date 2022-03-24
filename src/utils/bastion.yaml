@@ -8,10 +8,7 @@ Parameters:
     Default: BastionInitial
   AdminAppImage:
     Type: String
-    Default: 'public.ecr.aws/y7d9d7k6/dumb-admin-env:0.14.0'
-  CCFBucketName:
-    Type: String
-    Default: ccf-bucket
+    Default: 'public.ecr.aws/y7d9d7k6/admin-app:0.11.0'
 Resources:
   BastionVPC:
     Type: 'AWS::EC2::VPC'
@@ -194,14 +191,6 @@ Resources:
                   - 'logs:PutLogEvents'
                   - 'ecs:*'
                 Resource: '*'
-        - PolicyName: CCFBucketPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action: 's3:*'
-                Resource:
-                  - !GetAtt CCFBucket.Arn
         - PolicyName: CCFLambdaPolicy
           PolicyDocument:
             Version: 2012-10-17
