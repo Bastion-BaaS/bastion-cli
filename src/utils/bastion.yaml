@@ -8,7 +8,7 @@ Parameters:
     Default: BastionInitial
   AdminAppImage:
     Type: String
-    Default: 'public.ecr.aws/y7d9d7k6/admin-app:0.11.0'
+    Default: 'public.ecr.aws/y7d9d7k6/admin-app:0.12.4'
 Resources:
   BastionVPC:
     Type: 'AWS::EC2::VPC'
@@ -255,14 +255,14 @@ Resources:
               awslogs-stream-prefix: ecs
         - Name: admin-db
           Essential: true
-          Image: 'mongo:latest'
+          Image: 'public.ecr.aws/y7d9d7k6/mongo:5.0.6'
           PortMappings:
             - ContainerPort: 27017 
               HostPort: 27017
           Environment:
             - Name: MONGO_INITDB_ROOT_PASSWORD
               Value: password
-            - Name: DBTierSubnet
+            - Name: MONGO_INITDB_ROOT_USERNAME
               Value: admin-app
           LogConfiguration:
             LogDriver: awslogs
