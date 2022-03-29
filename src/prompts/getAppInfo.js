@@ -1,6 +1,5 @@
 const inquirer = require('inquirer');
 const ui = require('../utils/ui');
-const chalk = require('chalk');
 
 const infraNameValidator = async (input) => {
   return /[A-Za-z]/.test(input);

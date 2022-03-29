@@ -2,7 +2,6 @@
 *-error.log
 /.nyc_output
 /lib
-/package-lock.json
 /tmp
 /yarn.lock
 node_modules
