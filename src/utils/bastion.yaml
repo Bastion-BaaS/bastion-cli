@@ -8,7 +8,7 @@ Parameters:
     Default: BastionInitial
   AdminAppImage:
     Type: String
-    Default: 'public.ecr.aws/y7d9d7k6/admin-app:0.12.4'
+    Default: 'public.ecr.aws/k0c9b1e9/bastion-admin-app:0.0.1'
 Resources:
   BastionVPC:
     Type: 'AWS::EC2::VPC'
@@ -141,11 +141,11 @@ Resources:
       VpcId: !Ref BastionVPC
       GroupName: SGAdminApp
       GroupDescription: Bastion security group for the Admin App
+      # Allow Traffic from ALB only
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 8080
-          Description: Allow inbound traffic
+          FromPort: 3001
+          ToPort: 3001
           SourceSecurityGroupId: !Ref SGALB
       Tags:
         - Key: stack
@@ -180,16 +180,8 @@ Resources:
                   - 'ecr:BatchCheckLayerAvailability'
                   - 'ecr:GetDownloadUrlForLayer'
                   - 'ecr:BatchGetImage'
-                  - 'ecr:GetDownloadUrlForLayer'
-                  - 'ecr:BatchGetImage'
-                  - 'ecr:BatchCheckLayerAvailability'
-                  - 'ecr:PutImage'
-                  - 'ecr:InitiateLayerUpload'
-                  - 'ecr:UploadLayerPart'
-                  - 'ecr:CompleteLayerUpload'
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
-                  - 'ecs:*'
                 Resource: '*'
         - PolicyName: CCFLambdaPolicy
           PolicyDocument:
@@ -208,6 +200,7 @@ Resources:
   AdminAppTaskDefinition:
     Type: 'AWS::ECS::TaskDefinition'
     Properties:
+      Family: BastionAdmin
       RequiresCompatibilities:
         - FARGATE
       ExecutionRoleArn: !GetAtt RoleAdminApp.Arn
@@ -230,18 +223,14 @@ Resources:
             - Name: AppTierSubnet
               Value: !Ref AppTier
             - Name: EFSSecurityGroup
-              Value: !Ref EFSSecurityGroup
+              Value: !GetAtt EFSSecurityGroup.GroupId
             - Name: SGAppServer
-              Value: !Ref SGAppServer
+              Value: !GetAtt SGAppServer.GroupId
             - Name: SGDBServer
-              Value: !Ref SGAppServer
-            - Name: AppServerIAMRole
-              Value: !Ref RoleAppServer
-            - Name: DBServerIAMRole
-              Value: !Ref RoleDBServer
-            - Name: AppServerIAMRoleArn
+              Value: !GetAtt SGDBServer.GroupId
+            - Name: RoleAppServer
               Value: !GetAtt RoleAppServer.Arn
-            - Name: DBServerIAMRoleArn
+            - Name: RoleDBServer
               Value: !GetAtt RoleDBServer.Arn
             - Name: ALBListener
               Value: !Ref ALBListener
@@ -344,13 +333,10 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 3001
-          ToPort: 3001
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
+      # Both App-server and Admin-app
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 3001
@@ -408,29 +394,13 @@ Resources:
       Port: 80
       Protocol: HTTP
       DefaultActions:
-        - Type: fixed-response
-          FixedResponseConfig:
-            ContentType: text/plain
-            StatusCode: "404"
-            MessageBody: You dont have any Bastion instances here
-    DependsOn:
-      - ALB
-  AdminAppALBListenerRule:
-    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
-    Properties:
-      ListenerArn: !Ref ALBListener
-      Priority: 1
-      Conditions:
-        - Field: path-pattern
-          PathPatternConfig:
-            Values:
-              - /admin/*
-      Actions:
         - Type: forward
           ForwardConfig:
             TargetGroups:
               - TargetGroupArn: !Ref AdminAppTargetGroup
                 Weight: 1
+    DependsOn:
+      - ALB
   RoleCCF:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -576,16 +546,16 @@ Resources:
       GroupName: SGAppServer
       GroupDescription: Security Group for BaaS instance App Server
       VpcId: !Ref BastionVPC
+      # From ALB, allow all outgoing
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 30000
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
+          FromPort: 3001
+          ToPort: 3001
+          SourceSecurityGroupId: !Ref SGALB
         - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 30000
-          CidrIp: 0.0.0.0/0
+          FromPort: 3001
+          ToPort: 3001
+          SourceSecurityGroupId: !Ref SGAdminApp
       Tags:
         - Key: stack
           Value: bastion
@@ -597,16 +567,12 @@ Resources:
       GroupName: SGDBServer
       GroupDescription: Security Group for BaaS instance DB Server
       VpcId: !Ref BastionVPC
+      # ALLOW 27017 incoming/outgoing
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 30000
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 30000
-          CidrIp: 0.0.0.0/0
+          FromPort: 27017
+          ToPort: 27017
+          SourceSecurityGroupId: !Ref SGAppServer
       Tags:
         - Key: stack
           Value: bastion
@@ -615,18 +581,35 @@ Resources:
   EFSSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
+      # ALLOW ONLY DB TRAFFIC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 30000
-          CidrIp: 0.0.0.0/0
+          FromPort: 2049
+          ToPort: 2049
+          SourceSecurityGroupId: !Ref SGDBServer
       SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 30000
-          CidrIp: 0.0.0.0/0
+          FromPort: 2049
+          ToPort: 2049
+          SourceSecurityGroupId: !Ref SGDBServer
       VpcId: !Ref BastionVPC
-      GroupDescription: Test
+      GroupDescription: EFS for DB Server data persistence
+  EFSSGAdmin:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      # ALLOW ONLY DB TRAFFIC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          SourceSecurityGroupId: !Ref SGAdminApp
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          SourceSecurityGroupId: !Ref SGAdminApp
+      VpcId: !Ref BastionVPC
+      GroupDescription: EFS for Admin App data persistence
   AdminEFS:
     Type: 'AWS::EFS::FileSystem'
     Properties:
@@ -637,11 +620,11 @@ Resources:
     Properties:
       FileSystemId: !Ref AdminEFS
       SecurityGroups:
-        - !Ref EFSSecurityGroup
+        - !Ref EFSSGAdmin
       SubnetId: !Ref AppTier
     DependsOn:
       - AdminEFS
-      - EFSSecurityGroup
+      - EFSSGAdmin
 Outputs:
   ALBDomain:
     Description: Application Load Balancer Domain Name
