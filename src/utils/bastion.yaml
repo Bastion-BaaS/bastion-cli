@@ -12,7 +12,7 @@ Parameters:
     Type: String
   AdminAppImage:
     Type: String
-    Default: 'public.ecr.aws/k2f8i0u8/admin-app:0.16.4'
+    Default: 'public.ecr.aws/k2f8i0u8/admin-app:0.16.5'
   AdminUsername:
     Type: String
   AdminPassword:
@@ -504,15 +504,9 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                Action: 'lambda:*'
-                Action: 's3:*'
-                Resource: '*'
-        - PolicyName: AppServerAdminPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action: '*'
+                Action:
+                  - 'lambda:*'
+                  - 's3:*'
                 Resource: '*'
   RoleDBServer:
     Type: 'AWS::IAM::Role'
