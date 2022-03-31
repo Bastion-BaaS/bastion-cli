@@ -6,6 +6,10 @@ Parameters:
   InfraName:
     Type: String
     Default: BastionInitial
+  AdminAppDomain:
+    Type: String
+  AdminHostedZoneId:
+    Type: String
   AdminAppImage:
     Type: String
     Default: 'public.ecr.aws/k0c9b1e9/bastion-admin-app:0.0.1'
@@ -182,20 +186,112 @@ Resources:
                   - 'ecr:BatchGetImage'
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
+                  - 'ecs:*'
                 Resource: '*'
         - PolicyName: CCFLambdaPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                Action: 'lambda:*'
+                Action:
+                  - 'lambda:GetFunction'
+                  - 'lambda:CreateFunction'
+                  - 'lambda:ListFunctions'
+                  - 'lambda:ListTags'
+                  - 'lambda:AddPermission'
+                  - 'lambda:DeleteFunction'
+                  - 'lambda:UpdateFunctionCode'
+                  - 'lambda:UpdateFunctionConfiguration'
+                  - 'lambda:UpdateFunctionConfiguration'
+                  - 's3:CreateBucket'
+                  - 's3:DeleteBucket'
+                  - 's3:DeleteObject'
+                  - 's3:GetObject'
+                  - 's3:GetObjectAttributes'
+                  - 's3:GetObjectAttributes'
+                  - 's3:ListAllMyBuckets'
+                  - 's3:ListBucket'
+                  - 's3:ListBucketMultipartUploads'
+                  - 's3:PutObject'
+                  - 's3:PutObject'
                 Resource: '*'
-        - PolicyName: AdminAppAdminPolicy 
+        - PolicyName: AdminAppCFPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                Action: '*'
+                Action:
+                  - 'cloudformation:CancelUpdateStack'
+                  - 'cloudformation:ContinueUpdateRollback'
+                  - 'cloudformation:CreateStack'
+                  - 'cloudformation:CreateStackSet'
+                  - 'cloudformation:DeleteStack'
+                  - 'cloudformation:DeleteStackInstances'
+                  - 'cloudformation:DeleteStackSet'
+                  - 'cloudformation:GetTemplate'
+                  - 'cloudformation:DeleteStack'
+                  - 'cloudformation:GetTemplateSummary'
+                  - 'cloudformation:ListExports'
+                  - 'cloudformation:ListImports'
+                  - 'cloudformation:ListStackInstances'
+                  - 'cloudformation:ListStackResources'
+                  - 'cloudformation:ListStackSets'
+                  - 'cloudformation:ListStacks'
+                  - 'cloudformation:RollbackStack'
+                  - 'cloudformation:TagResource'
+                  - 'cloudformation:UntagResource'
+                  - 'cloudformation:UpdateStack'
+                  - 'cloudformation:UpdateStackInstances'
+                  - 'cloudformation:UpdateStackSet'
+                  - 'cloudformation:ValidateTemplate'
+                  - 'elasticloadbalancing:CreateRule'
+                  - 'elasticloadbalancing:CreateListener'
+                  - 'elasticloadbalancing:CreateTargetGroup'
+                  - 'elasticloadbalancing:DeleteListener'
+                  - 'elasticloadbalancing:DeleteRule'
+                  - 'elasticloadbalancing:DeleteTargetGroup'
+                  - 'elasticloadbalancing:DeregisterTargets'
+                  - 'elasticloadbalancing:DescribeListeners'
+                  - 'elasticloadbalancing:DescribeRules'
+                  - 'elasticloadbalancing:DescribeTargetGroups'
+                  - 'elasticloadbalancing:DescribeTargetGroupAttributes'
+                  - 'elasticloadbalancing:ModifyListener'
+                  - 'elasticloadbalancing:ModifyRule'
+                  - 'elasticloadbalancing:ModifyTargetGroup'
+                  - 'elasticloadbalancing:RegisterTargets'
+                  - 'elasticloadbalancing:RemoveTags'
+                  - 'elasticloadbalancing:SetRulePriorities'
+                  - 'elasticloadbalancing:SetSecurityGroups'
+                  - 'elasticloadbalancing:SetSubnets'
+                  - 'elasticfilesystem:ClientMount'
+                  - 'elasticfilesystem:CreateAccessPoint'
+                  - 'elasticfilesystem:CreateFileSystem'
+                  - 'elasticfilesystem:CreateMountTarget'
+                  - 'elasticfilesystem:DeleteAccessPoint'
+                  - 'elasticfilesystem:DeleteFileSystem'
+                  - 'elasticfilesystem:DeleteMountTarget'
+                  - 'elasticfilesystem:UpdateFileSystem'
+                  - 'iam:AttachRolePolicy'
+                  - 'iam:CreatePolicy'
+                  - 'iam:CreateRole'
+                  - 'iam:DeletePolicy'
+                  - 'iam:DeleteRole'
+                  - 'iam:DeleteRolePolicy'
+                  - 'iam:GetRole'
+                  - 'iam:GetPolicy'
+                  - 'iam:GetRolePolicy'
+                  - 'iam:ListRoles'
+                  - 'iam:TagRole'
+                  - 'iam:UntagRole'
+                  - 'iam:UntagRole'
+                  - 'servicediscovery:CreatePrivateDnsNamespace'
+                  - 'servicediscovery:CreateService'
+                  - 'servicediscovery:DeleteNamespace'
+                  - 'servicediscovery:DeleteService'
+                  - 'servicediscovery:DeregisterInstance'
+                  - 'servicediscovery:GetInstancesHealthStatus'
+                  - 'servicediscovery:GetNamespace'
+                  - 'servicediscovery:GetService'
                 Resource: '*'
   AdminAppTaskDefinition:
     Type: 'AWS::ECS::TaskDefinition'
@@ -391,8 +487,10 @@ Resources:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
     Properties:
       LoadBalancerArn: !Ref ALB
-      Port: 80
-      Protocol: HTTP
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref AdminAppCert
       DefaultActions:
         - Type: forward
           ForwardConfig:
@@ -401,6 +499,28 @@ Resources:
                 Weight: 1
     DependsOn:
       - ALB
+      - AdminAppCert
+  AdminAppRecordSet:
+    Type: 'AWS::Route53::RecordSet'
+    Properties:
+      Name: !Ref AdminAppDomain
+      HostedZoneId: !Ref AdminHostedZoneId
+      AliasTarget:
+        HostedZoneId: !GetAtt ALB.CanonicalHostedZoneID
+        DNSName: !GetAtt ALB.DNSName
+      Type: A
+    DependsOn:
+      - ALB
+  AdminAppCert:
+    Type: 'AWS::CertificateManager::Certificate'
+    Properties:
+      DomainName: !Ref AdminAppDomain
+      DomainValidationOptions:
+        - DomainName: !Ref AdminAppDomain
+          HostedZoneId: !Ref AdminHostedZoneId
+      ValidationMethod: DNS
+    DependsOn:
+      - AdminAppRecordSet
   RoleCCF:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -459,9 +579,6 @@ Resources:
                   - 'ecr:BatchCheckLayerAvailability'
                   - 'ecr:GetDownloadUrlForLayer'
                   - 'ecr:BatchGetImage'
-                  - 'ecr:GetDownloadUrlForLayer'
-                  - 'ecr:BatchGetImage'
-                  - 'ecr:BatchCheckLayerAvailability'
                   - 'ecr:PutImage'
                   - 'ecr:InitiateLayerUpload'
                   - 'ecr:UploadLayerPart'
@@ -509,7 +626,18 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                Action: '*'
+                Action:
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                  - 'ecr:PutImage'
+                  - 'ecr:InitiateLayerUpload'
+                  - 'ecr:UploadLayerPart'
+                  - 'ecr:CompleteLayerUpload'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                  - 'ecs:*'
                 Resource: '*'
   SGCCF:
     Type: 'AWS::EC2::SecurityGroup'

@@ -19,7 +19,7 @@ class DeployCommand extends Command {
   static description = 'Create AWS infrastructure for your app';
 
   async run() {
-    const { name, region } = await getAppInfo();
+    const { name, region, domain, zone } = await getAppInfo();
     const client = new CloudFormationClient({ region });
 
     const params = {
@@ -32,6 +32,14 @@ class DeployCommand extends Command {
         {
           ParameterKey: "InfraName",
           ParameterValue: name
+        },
+        {
+          ParameterKey: "AdminAppDomain",
+          ParameterValue: domain
+        },
+        {
+          ParameterKey: "AdminHostedZoneId",
+          ParameterValue: zone
         }
       ],
       TemplateBody: template,

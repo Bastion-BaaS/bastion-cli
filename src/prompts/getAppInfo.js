@@ -35,7 +35,17 @@ const getAppInfo = async () => {
         'ap-southeast-2',
       ],
       default: 'us-east-1',
-    }
+    },
+    {
+      name: 'domain',
+      message: ui.ask('Enter the domain name you want to host your infrastructure on'),
+      type: 'input',
+    },
+    {
+      name: 'zone',
+      message: ui.ask('Enter the AWS provided hosted zone ID of your domain'),
+      type: 'input',
+    },
   ]);
 
   return response;
