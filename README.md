@@ -12,12 +12,12 @@ Bastion abstracts away the process of creating and maintaining a backend so you 
 ### Usage
 
 ```sh-session
-$ npm install -g bastion-cli
+$ npm install -g bastion-baas-cli
 $ bastion <COMMAND>
 running command...
 $ bastion (-v|--version|version)
 
-bastion-cli/0.1.0 darwin-arm64 node-v16.13.0
+bastion-baas-cli/0.1.0 darwin-arm64 node-v16.13.0
 
 $ bastion --help [COMMAND]
 USAGE
