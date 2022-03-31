@@ -1,8 +1,10 @@
 const ui = require('./ui');
 
 const handleDeploy = (err) => {
-  if (err.Error.Code === 'AlreadyExistsException') {
+  if (err.Error?.Code === 'AlreadyExistsException') {
     ui.warn('You are trying to create a stack that already exists!');
+  } else {
+    ui.warn(err);
   }
 };
 

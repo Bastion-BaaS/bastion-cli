@@ -7,19 +7,21 @@ const config = new Conf();
 const template = fs.readFileSync('./src/utils/bastion.yaml', 'utf8');
 const errorHandler = require('../utils/errorHandler');
 const ui = require('../utils/ui');
+const credentials = require('../utils/credentials');
 
-const storeInfraName = (infraName) => {
+const storeInfraName = (infraObj) => {
   let infraArr = JSON.parse(config.get('INFRA_NAMES') || '[]');
 
-  infraArr.push(infraName);
+  infraArr.push(infraObj);
   config.set('INFRA_NAMES', JSON.stringify(infraArr));
-}
+};
 
 class DeployCommand extends Command {
   static description = 'Create AWS infrastructure for your app';
 
   async run() {
-    const { name, region } = await getAppInfo();
+    const { name, region, domain, zone, username } = await getAppInfo();
+    const password = credentials.generatePassword();
     const client = new CloudFormationClient({ region });
 
     const params = {
@@ -32,6 +34,22 @@ class DeployCommand extends Command {
         {
           ParameterKey: "InfraName",
           ParameterValue: name
+        },
+        {
+          ParameterKey: "AdminAppDomain",
+          ParameterValue: domain
+        },
+        {
+          ParameterKey: "AdminHostedZoneId",
+          ParameterValue: zone
+        },
+        {
+          ParameterKey: "AdminUsername",
+          ParameterValue: username
+        },
+        {
+          ParameterKey: "AdminPassword",
+          ParameterValue: password
         }
       ],
       TemplateBody: template,
@@ -44,9 +62,10 @@ class DeployCommand extends Command {
       if (response.$metadata.httpStatusCode === 200) {
         const successMessage = "\nYour Bastion infrastructure creation started \n" +
           "This will take a few minutes or half an hour \n" +
-          "To see your if your admin dashboard is ready use 'bastion show' \n";
+          "To see your if your admin dashboard is ready use 'bastion show' \n\n";
         ui.notify(successMessage);
-        storeInfraName({ name, region });
+        storeInfraName({ name, region, username, password });
+        credentials.show(name);
       }
     } catch(err) {
       errorHandler.handleDeploy(err);

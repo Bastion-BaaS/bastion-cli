@@ -54,6 +54,11 @@ const warn = (text, log=true) => {
   }
 };
 
+const logCredentials = (username, password) => {
+  console.log(white2('Your username is:'), tomatoBold(username), "\n");
+  console.log(white2('Your password is:'), tomatoBold(password), "\n\n");
+}
+
 const printWelcome = () => {
   console.log(tomatoBold("Welcome to Bastion-CLI!\n"));
   const welcomeMessage = "This tool will provision the infrastructure that your Bastion instances will run on.\n\n" +
@@ -65,4 +70,4 @@ const ask = (text) => {
   return white2(text);
 };
 
-module.exports = { runSpinner, notify, printLogo, printWelcome, ask, warn };
+module.exports = { runSpinner, notify, printLogo, printWelcome, ask, warn, logCredentials };
