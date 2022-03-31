@@ -2,6 +2,10 @@
   <img src="Bastion_logo.png" width="400" height="400" />
 </p>
 
+![shields.io npm version badge](https://img.shields.io/npm/v/bastion-baas-cli)
+![shields.io npm license badge](https://img.shields.io/npm/l/bastion-baas-cli)
+![shields.io custom website link badge](https://img.shields.io/static/v1?label=website&message=bastion.github.io.io&color=blue)
+
 <h1>Bastion: A self-hosted Backend-as-a-Service deployed using AWS</h1>
 Bastion abstracts away the process of creating and maintaining a backend so you don’t have to. It allows you to utilize all the benefits of AWS while giving you complete control over your data and infrastructure. If you would like to know more, read our [CASE_STUDY_LINK].
 
