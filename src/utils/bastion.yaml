@@ -12,7 +12,11 @@ Parameters:
     Type: String
   AdminAppImage:
     Type: String
-    Default: 'public.ecr.aws/k0c9b1e9/bastion-admin-app:0.0.1'
+    Default: 'public.ecr.aws/k2f8i0u8/admin-app:0.16.4'
+  AdminUsername:
+    Type: String
+  AdminPassword:
+    Type: String
 Resources:
   BastionVPC:
     Type: 'AWS::EC2::VPC'
@@ -174,7 +178,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: BastionTaskExecutionPolicy
+        - PolicyName: AdminAppPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -187,111 +191,15 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                   - 'ecs:*'
-                Resource: '*'
-        - PolicyName: CCFLambdaPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'lambda:GetFunction'
-                  - 'lambda:CreateFunction'
-                  - 'lambda:ListFunctions'
-                  - 'lambda:ListTags'
-                  - 'lambda:AddPermission'
-                  - 'lambda:DeleteFunction'
-                  - 'lambda:UpdateFunctionCode'
-                  - 'lambda:UpdateFunctionConfiguration'
-                  - 'lambda:UpdateFunctionConfiguration'
-                  - 's3:CreateBucket'
-                  - 's3:DeleteBucket'
-                  - 's3:DeleteObject'
-                  - 's3:GetObject'
-                  - 's3:GetObjectAttributes'
-                  - 's3:GetObjectAttributes'
-                  - 's3:ListAllMyBuckets'
-                  - 's3:ListBucket'
-                  - 's3:ListBucketMultipartUploads'
-                  - 's3:PutObject'
-                  - 's3:PutObject'
-                Resource: '*'
-        - PolicyName: AdminAppCFPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'cloudformation:CancelUpdateStack'
-                  - 'cloudformation:ContinueUpdateRollback'
-                  - 'cloudformation:CreateStack'
-                  - 'cloudformation:CreateStackSet'
-                  - 'cloudformation:DeleteStack'
-                  - 'cloudformation:DeleteStackInstances'
-                  - 'cloudformation:DeleteStackSet'
-                  - 'cloudformation:GetTemplate'
-                  - 'cloudformation:DeleteStack'
-                  - 'cloudformation:GetTemplateSummary'
-                  - 'cloudformation:ListExports'
-                  - 'cloudformation:ListImports'
-                  - 'cloudformation:ListStackInstances'
-                  - 'cloudformation:ListStackResources'
-                  - 'cloudformation:ListStackSets'
-                  - 'cloudformation:ListStacks'
-                  - 'cloudformation:RollbackStack'
-                  - 'cloudformation:TagResource'
-                  - 'cloudformation:UntagResource'
-                  - 'cloudformation:UpdateStack'
-                  - 'cloudformation:UpdateStackInstances'
-                  - 'cloudformation:UpdateStackSet'
-                  - 'cloudformation:ValidateTemplate'
-                  - 'elasticloadbalancing:CreateRule'
-                  - 'elasticloadbalancing:CreateListener'
-                  - 'elasticloadbalancing:CreateTargetGroup'
-                  - 'elasticloadbalancing:DeleteListener'
-                  - 'elasticloadbalancing:DeleteRule'
-                  - 'elasticloadbalancing:DeleteTargetGroup'
-                  - 'elasticloadbalancing:DeregisterTargets'
-                  - 'elasticloadbalancing:DescribeListeners'
-                  - 'elasticloadbalancing:DescribeRules'
-                  - 'elasticloadbalancing:DescribeTargetGroups'
-                  - 'elasticloadbalancing:DescribeTargetGroupAttributes'
-                  - 'elasticloadbalancing:ModifyListener'
-                  - 'elasticloadbalancing:ModifyRule'
-                  - 'elasticloadbalancing:ModifyTargetGroup'
-                  - 'elasticloadbalancing:RegisterTargets'
-                  - 'elasticloadbalancing:RemoveTags'
-                  - 'elasticloadbalancing:SetRulePriorities'
-                  - 'elasticloadbalancing:SetSecurityGroups'
-                  - 'elasticloadbalancing:SetSubnets'
-                  - 'elasticfilesystem:ClientMount'
-                  - 'elasticfilesystem:CreateAccessPoint'
-                  - 'elasticfilesystem:CreateFileSystem'
-                  - 'elasticfilesystem:CreateMountTarget'
-                  - 'elasticfilesystem:DeleteAccessPoint'
-                  - 'elasticfilesystem:DeleteFileSystem'
-                  - 'elasticfilesystem:DeleteMountTarget'
-                  - 'elasticfilesystem:UpdateFileSystem'
-                  - 'iam:AttachRolePolicy'
-                  - 'iam:CreatePolicy'
-                  - 'iam:CreateRole'
-                  - 'iam:DeletePolicy'
-                  - 'iam:DeleteRole'
-                  - 'iam:DeleteRolePolicy'
-                  - 'iam:GetRole'
-                  - 'iam:GetPolicy'
-                  - 'iam:GetRolePolicy'
-                  - 'iam:ListRoles'
-                  - 'iam:TagRole'
-                  - 'iam:UntagRole'
-                  - 'iam:UntagRole'
-                  - 'servicediscovery:CreatePrivateDnsNamespace'
-                  - 'servicediscovery:CreateService'
-                  - 'servicediscovery:DeleteNamespace'
-                  - 'servicediscovery:DeleteService'
-                  - 'servicediscovery:DeregisterInstance'
-                  - 'servicediscovery:GetInstancesHealthStatus'
-                  - 'servicediscovery:GetNamespace'
-                  - 'servicediscovery:GetService'
+                  - 'lambda:*'
+                  - 's3:*'
+                  - 'elasticloadbalancing:*'
+                  - 'elasticfilesystem:*'
+                  - 'iam:*'
+                  - 'servicediscovery:*'
+                  - 'cloudformation:*'
+                  - 'route53:*'
+                  - 'ec2:*'
                 Resource: '*'
   AdminAppTaskDefinition:
     Type: 'AWS::ECS::TaskDefinition'
@@ -332,6 +240,10 @@ Resources:
               Value: !Ref ALBListener
             - Name: AppServerLG
               Value: !Ref AppServerLG
+            - Name: AdminUsername
+              Value: !Ref AdminUsername
+            - Name: AdminPassword
+              Value: !Ref AdminPassword
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -593,6 +505,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: 'lambda:*'
+                Action: 's3:*'
                 Resource: '*'
         - PolicyName: AppServerAdminPolicy
           PolicyDocument:

@@ -46,6 +46,11 @@ const getAppInfo = async () => {
       message: ui.ask('Enter the AWS provided hosted zone ID of your domain'),
       type: 'input',
     },
+    {
+      name: 'username',
+      message: ui.ask('Enter a username for your admin app'),
+      type: 'input',
+    },
   ]);
 
   return response;
