@@ -12,7 +12,7 @@ Parameters:
     Type: String
   AdminAppImage:
     Type: String
-    Default: 'public.ecr.aws/k2f8i0u8/admin-app:0.16.5'
+    Default: 'public.ecr.aws/k0c9b1e9/bastion-admin-app:0.0.1'
   AdminUsername:
     Type: String
   AdminPassword:
@@ -285,9 +285,6 @@ Resources:
       Cluster: !Ref AdminAppCluster
       DesiredCount: 1
       TaskDefinition: !Ref AdminAppTaskDefinition
-      DeploymentConfiguration:
-        MaximumPercent: 100
-        MinimumHealthyPercent: 0
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
@@ -384,10 +381,25 @@ Resources:
           Value: Bastion
         - Key: name
           Value: !Ref InfraName
-  NATGatewayRoute:
+  DBTierRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref BastionVPC
+      Tags:
+        - Key: stack
+          Value: Bastion
+        - Key: name
+          Value: !Ref InfraName
+  NATGatewayAppTierRoute:
     Type: 'AWS::EC2::Route'
     Properties:
       RouteTableId: !Ref AppTierRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref WT1NATGateway
+  NATGatewayDBTierRoute:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref DBTierRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref WT1NATGateway
   AppTierRTAssociation:
@@ -395,6 +407,11 @@ Resources:
     Properties:
       SubnetId: !Ref AppTier
       RouteTableId: !Ref AppTierRouteTable
+  DBTierRTAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref DBTier
+      RouteTableId: !Ref DBTierRouteTable
   ALBListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
     Properties:
