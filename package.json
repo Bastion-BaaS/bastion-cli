@@ -1,6 +1,6 @@
 {
   "name": "bastion-baas-cli",
-  "version": "0.0.5",
+  "version": "0.1.4",
   "description": "CLI app for deploying your bastion infrastructure",
   "author": "bastion-cli",
   "contributors": [
@@ -21,6 +21,8 @@
   "main": "src/index.js",
   "repository": "Bastion-BaaS/bastion-cli",
   "files": [
+    "/src",
+    "/src/utils/bastion.yaml",
     "/bin",
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json"
@@ -34,7 +36,8 @@
     "conf": "^10.1.1",
     "crypto": "^1.0.1",
     "inquirer": "^8.2.1",
-    "ora": "^5.4.0"
+    "ora": "^5.4.0",
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "@oclif/test": "^2",
