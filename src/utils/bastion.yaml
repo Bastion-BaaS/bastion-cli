@@ -12,7 +12,7 @@ Parameters:
     Type: String
   AdminAppImage:
     Type: String
-    Default: 'public.ecr.aws/k0c9b1e9/bastion-admin-app:0.0.1'
+    Default: 'public.ecr.aws/k0c9b1e9/bastion-admin-app:0.1.0'
   AdminUsername:
     Type: String
   AdminPassword:
@@ -178,7 +178,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: AdminAppPolicy
+        - PolicyName: AdminAppTaskExecutionPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -191,15 +191,130 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                   - 'ecs:*'
-                  - 'lambda:*'
-                  - 's3:*'
-                  - 'elasticloadbalancing:*'
-                  - 'elasticfilesystem:*'
-                  - 'iam:*'
-                  - 'servicediscovery:*'
-                  - 'cloudformation:*'
-                  - 'route53:*'
                   - 'ec2:*'
+                Resource: '*'
+        - PolicyName: AdminAppControlPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'lambda:CreateFunction'
+                  - 'lambda:CreateAlias'
+                  - 'lambda:DeleteAlias'
+                  - 'lambda:DeleteFunction*'
+                  - 'lambda:DeleteLayerVersion'
+                  - 'lambda:Get*'
+                  - 'lambda:Invoke*'
+                  - 'lambda:List*'
+                  - 'lambda:Publish*'
+                  - 'lambda:PutFunction*'
+                  - 'lambda:RemovePermission'
+                  - 'lambda:TagResource'
+                  - 'lambda:UntagResource'
+                  - 'lambda:UpdateFunction*'
+                  - 's3:CreateAccessPoint*'
+                  - 's3:CreateBucket'
+                  - 's3:DeleteAccessPoint*'
+                  - 's3:DeleteBucket*'
+                  - 's3:DeleteObject*'
+                  - 's3:Get*'
+                  - 's3:List*'
+                  - 's3:PutAccessPoint*'
+                  - 's3:PutBucket*'
+                  - 's3:PutObject*'
+                  - 's3:Replicate*'
+                  - 'elasticloadbalancing:AddListenerCertificates'
+                  - 'elasticloadbalancing:AddTags'
+                  - 'elasticloadbalancing:CreateListener'
+                  - 'elasticloadbalancing:CreateLoadBalancer'
+                  - 'elasticloadbalancing:CreateRule'
+                  - 'elasticloadbalancing:CreateTargetGroup'
+                  - 'elasticloadbalancing:DeleteListener'
+                  - 'elasticloadbalancing:DeleteLoadBalancer'
+                  - 'elasticloadbalancing:DeleteRule'
+                  - 'elasticloadbalancing:DeleteTargetGroup'
+                  - 'elasticloadbalancing:DeregisterTargets'
+                  - 'elasticloadbalancing:DescribeListener*'
+                  - 'elasticloadbalancing:DescribeLoadBalancer*'
+                  - 'elasticloadbalancing:DescribeRules'
+                  - 'elasticloadbalancing:DescribeTags'
+                  - 'elasticloadbalancing:DescribeTarget*'
+                  - 'elasticloadbalancing:RegisterTargets'
+                  - 'elasticloadbalancing:RemoveListenerCertificates'
+                  - 'elasticloadbalancing:RemoveTags'
+                  - 'elasticloadbalancing:SetSecurityGroups'
+                  - 'elasticloadbalancing:SetSubnets'
+                  - 'elasticloadbalancing:SetRulePriorities'
+                  - 'iam:AddRoleToInstanceProfile'
+                  - 'iam:AttachRolePolicy'
+                  - 'iam:CreateInstanceProfile'
+                  - 'iam:CreatePolicy'
+                  - 'iam:CreateRole'
+                  - 'iam:DeletePolicy'
+                  - 'iam:DeleteRole*'
+                  - 'iam:DetachRolePolicy'
+                  - 'iam:GetInstanceProfile'
+                  - 'iam:Get*'
+                  - 'iam:List*'
+                  - 'iam:PassRole'
+                  - 'iam:PutRolePolicy'
+                  - 'iam:RemoveRoleFromInstanceProfile'
+                  - 'iam:TagRole'
+                  - 'iam:UntagRole'
+                  - 'iam:TagPolicy'
+                  - 'iam:UntagPolicy'
+                  - 'iam:UpdateRole*'
+                  - 'elasticfilesystem:*'
+                  - 'servicediscovery:CreatePrivateDnsNamespace'
+                  - 'servicediscovery:CreateService'
+                  - 'servicediscovery:DeleteNamespace'
+                  - 'servicediscovery:DeleteService'
+                  - 'servicediscovery:DeregisterInstance'
+                  - 'servicediscovery:DiscoverInstances'
+                  - 'servicediscovery:Get*'
+                  - 'servicediscovery:List*'
+                  - 'servicediscovery:RegisterInstance'
+                  - 'servicediscovery:TagResource'
+                  - 'servicediscovery:UntagResource'
+                  - 'servicediscovery:UpdatePrivateDnsNamespace'
+                  - 'servicediscovery:UpdateInstanceCustomHealthStatus'
+                  - 'servicediscovery:UpdatePrivateDnsNamespace'
+                  - 'cloudformation:BatchDescribeTypeConfigurations'
+                  - 'cloudformation:CancelUpdateStack'
+                  - 'cloudformation:ContinueUpdateRollback'
+                  - 'cloudformation:CreateChangeSet'
+                  - 'cloudformation:CreateStack*'
+                  - 'cloudformation:DeleteStack*'
+                  - 'cloudformation:DescribeStack*'
+                  - 'cloudformation:DescribeType*'
+                  - 'cloudformation:GetTemplate*'
+                  - 'cloudformation:List*'
+                  - 'cloudformation:RegisterType'
+                  - 'cloudformation:DescribeType'
+                  - 'cloudformation:DeregisterType'
+                  - 'cloudformation:DeactivateType'
+                  - 'cloudformation:RollbackStack'
+                  - 'cloudformation:SetStackPolicy'
+                  - 'cloudformation:SetType*'
+                  - 'cloudformation:TagResource'
+                  - 'cloudformation:TestType'
+                  - 'cloudformation:UntagResource'
+                  - 'cloudformation:UpdateStack*'
+                  - 'cloudformation:ValidateTemplate'
+                  - 'route53:AssociateVPCWithHostedZone'
+                  - 'route53:CreateHostedZone'
+                  - 'route53:ChangeResourceRecordSets'
+                  - 'route53:CreateHealthCheck'
+                  - 'route53:CreateQueryLoggingConfig'
+                  - 'route53:CreateVPCAssociationAuthorization'
+                  - 'route53:DeleteHealthCheck'
+                  - 'route53:DeleteHostedZone'
+                  - 'route53:DeleteTrafficPolicy'
+                  - 'route53:DeleteVPCAssociationAuthorization'
+                  - 'route53:DisassociateVPCFromHostedZone'
+                  - 'route53:Get*'
+                  - 'route53:List*'
                 Resource: '*'
   AdminAppTaskDefinition:
     Type: 'AWS::ECS::TaskDefinition'
@@ -498,7 +613,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: AdminAppExecutionPolicy
+        - PolicyName: AppServerTaskExecutionPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -508,10 +623,6 @@ Resources:
                   - 'ecr:BatchCheckLayerAvailability'
                   - 'ecr:GetDownloadUrlForLayer'
                   - 'ecr:BatchGetImage'
-                  - 'ecr:PutImage'
-                  - 'ecr:InitiateLayerUpload'
-                  - 'ecr:UploadLayerPart'
-                  - 'ecr:CompleteLayerUpload'
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                   - 'ecs:*'
@@ -522,8 +633,28 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'lambda:*'
-                  - 's3:*'
+                  - 'lambda:DeleteLayerVersion'
+                  - 'lambda:Get*'
+                  - 'lambda:Invoke*'
+                  - 'lambda:List*'
+                  - 'lambda:Publish*'
+                  - 'lambda:TagResource'
+                  - 'lambda:UntagResource'
+                Resource: '*'
+        - PolicyName: AppServerFilesPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:CreateAccessPoint*'
+                  - 's3:DeleteAccessPoint*'
+                  - 's3:DeleteObject*'
+                  - 's3:Get*'
+                  - 's3:List*'
+                  - 's3:PutAccessPoint*'
+                  - 's3:PutObject*'
+                  - 's3:Replicate*'
                 Resource: '*'
   RoleDBServer:
     Type: 'AWS::IAM::Role'
