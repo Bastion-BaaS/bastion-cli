@@ -14,7 +14,7 @@ const getInfra = (name) => {
 
 const getDNS = (response) => {
   return response.Stacks[0].Outputs
-    .filter(outputObj => outputObj.OutputKey === 'ALBDomain')[0]
+    .filter(outputObj => outputObj.OutputKey === 'UserDomainName')[0]
     .OutputValue;
 };
 
@@ -39,7 +39,7 @@ class Show extends Command {
 
       if (status === 'CREATE_COMPLETE') {
         spinner.stop(ui.ask('Your app is ready!'));
-        ui.notify(`\nYour DNS name is: ${ui.ask(getDNS(response))}\n`);
+        ui.logDomain(getDNS(response));
         ui.logCredentials(infraObj.username, infraObj.password);
       } else {
         spinner.fail(console.log(ui.ask(`Not ready yet. Your AWS stack status: ${status}`)));

@@ -809,6 +809,6 @@ Resources:
       - AdminEFS
       - EFSSGAdmin
 Outputs:
-  ALBDomain:
-    Description: Application Load Balancer Domain Name
-    Value: !GetAtt ALB.DNSName
+  UserDomainName:
+    Description: User provided domain name
+    Value: !Ref AdminAppDomain

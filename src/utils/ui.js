@@ -54,6 +54,10 @@ const warn = (text, log=true) => {
   }
 };
 
+const logDomain = (domainName) => {
+  console.log(white2("\nYou can access your Admin app from:"), tomatoBold(domainName), "\n");
+}
+
 const logCredentials = (username, password) => {
   console.log(white2('Your username is:'), tomatoBold(username), "\n");
   console.log(white2('Your password is:'), tomatoBold(password), "\n\n");
@@ -70,4 +74,4 @@ const ask = (text) => {
   return white2(text);
 };
 
-module.exports = { runSpinner, notify, printLogo, printWelcome, ask, warn, logCredentials };
+module.exports = { runSpinner, notify, printLogo, printWelcome, ask, warn, logCredentials, logDomain };
