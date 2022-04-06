@@ -12,7 +12,7 @@ Parameters:
     Type: String
   AdminAppImage:
     Type: String
-    Default: 'public.ecr.aws/k0c9b1e9/bastion-admin-app:0.1.0'
+    Default: 'public.ecr.aws/k2f8i0u8/admin-app:0.17.10'
   AdminUsername:
     Type: String
   AdminPassword:
@@ -193,6 +193,17 @@ Resources:
                   - 'ecs:*'
                   - 'ec2:*'
                 Resource: '*'
+        - PolicyName: service-autoscaling
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'application-autoscaling:*'
+                  - 'cloudwatch:DescribeAlarms'
+                  - 'cloudwatch:PutMetricAlarm'
+                  - 'ecs:DescribeServices'
+                  - 'ecs:UpdateService'
+                Resource: '*'
         - PolicyName: AdminAppControlPolicy
           PolicyDocument:
             Version: 2012-10-17
@@ -355,6 +366,8 @@ Resources:
               Value: !Ref ALBListener
             - Name: AppServerLG
               Value: !Ref AppServerLG
+            - Name: SGCCF
+              Value: !Ref SGCCF
             - Name: AdminUsername
               Value: !Ref AdminUsername
             - Name: AdminPassword
@@ -593,6 +606,7 @@ Resources:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
+                  - 'ec2:*'
                 Resource:
                   - '*'
   RoleAppServer:
@@ -655,6 +669,17 @@ Resources:
                   - 's3:PutAccessPoint*'
                   - 's3:PutObject*'
                   - 's3:Replicate*'
+                Resource: '*'
+        - PolicyName: app-service-autoscaling
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'application-autoscaling:*'
+                  - 'cloudwatch:DescribeAlarms'
+                  - 'cloudwatch:PutMetricAlarm'
+                  - 'ecs:DescribeServices'
+                  - 'ecs:UpdateService'
                 Resource: '*'
   RoleDBServer:
     Type: 'AWS::IAM::Role'
