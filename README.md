@@ -61,6 +61,7 @@ USAGE
 
 <br>
 
+
 ## `bastion deploy`
 Deploys the initial AWS infrastructure that your Bastion instances will run on. The name must be different from any other AWS infrastructure stack you have created. You will be prompted for the following information:
 - Name to give to your Bastion infrastructure
@@ -75,6 +76,7 @@ Deploys the initial AWS infrastructure that your Bastion instances will run on. 
 `bastion deploy` can take up to 30 minutes to provision all of your infrastructure in AWS. To check the status of your stack, you can use `bastion show`. Your infrastructure will be accessible at the domain that you provided once the AWS resources have been deployed.
 
 <br>
+ 
 
 ## `bastion destroy`
 
@@ -90,6 +92,7 @@ Upon entering this command you will be prompted for the following information:
 If you use `bastion destroy` before `bastion deploy` has fully provisioned your infrastructure, it will still succeed in destroying your stack resources.
 
 <br>
+
 
 ## `bastion help [COMMAND]`
 
@@ -108,11 +111,13 @@ OPTIONS
 
 <br>
 
+
 ## `bastion config`
 
 Shows the location of your local configuration file. This file contains the names and AWS regions of your infrastructure stacks. The stack name specified on `bastion destroy` removes the corresponding name/region combination from this file.  
 
 <br>
+
 
 ## `bastion show`
 
